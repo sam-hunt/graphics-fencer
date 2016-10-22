@@ -220,7 +220,6 @@
             var stages = [
                 {
                     stageName   : "Lunges and recovers1",
-                    stageInit   : resetSwordParts,
                     stageStart  : 0,
                     stageEnd    : 3000,
                     stageCurve  : targetCos
@@ -239,6 +238,7 @@
                 },
                 {
                     stageName   : "Sword pommel & tang fall off",
+                    stageInit   : detachSwordPommel,
                     stageStart  : 4500,
                     stageEnd    : 5500,
                     stageCurve  : targetParabola
@@ -251,6 +251,8 @@
                 },
                 {
                     stageName   : "Sword coquille falls off",
+                    stageInit   : detachSwordCoquille,
+                    stageDestroy: resetSwordParts,
                     stageStart  : 7500,
                     stageEnd    : 9000,
                     stageCurve  : targetParabola
@@ -267,8 +269,29 @@
             var duration = totalStagesLength();
 
             function updateStages(currentTime) {
+                var oldRelTime = (currentTime - startTime);
+                // Make sure we wrap around
+                var relTime = oldRelTime % duration;
+
+                // First close old stages
                 for (var i = 0; i < stages.length; i++) {
-                    total = Math.max(total, stages[i].stageEnd);
+                    if (((oldRelTime >= stages[i].stageEnd) || (oldRelTime <= stages[i].stageStart)) && (stages[i].active)) {
+                        stages[i].active = false;
+                        console.log(stages[i].stageName + " ending");
+                        if (stages[i].stageDestroy) {
+                            stages[i].stageDestroy();
+                        }
+                    }
+                }
+                // Then open the new stages
+                for (var i = 0; i < stages.length; i++) {
+                    if (((relTime > stages[i].stageStart) && (relTime < stages[i].stageEnd)) && (!stages[i].active)) {
+                        console.log(stages[i].stageName + " starting");
+                        stages[i].active = true;
+                        if (stages[i].stageInit) {
+                            stages[i].stageInit();
+                        }
+                    }
                 }
             }
 
@@ -279,9 +302,11 @@
                 swordPommel.detached = false;
             }
 
-            function detachSwordBlade() {
-                swordBlade.detached = true;
-            }
+            function detachSwordBlade() {swordBlade.detached = true;}
+            function detachSwordCoquille() {swordCoquille.detached = true;}
+            function detachSwordPommel() {swordPommel.detached = true;}
+
+            
 
             var proportion;
 
@@ -310,6 +335,8 @@
 
                 var currentTime = new Date().getTime();
 
+                updateStages(currentTime);
+
                 if  (node.rotates && !node.detached) {
                     if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
                         node.rotation.x = intermediateValue(startTime, currentTime, node.startRotation[0], node.endRotation[0], targetCos);
@@ -321,6 +348,13 @@
                         node.rotation.y = node.startRotation[1];
                         node.rotation.z = node.startRotation[2];
                      }
+                }
+                if (node.detached) {
+                    {if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
+                        //node.position.x = intermediateValue(startTime, currentTime, node.startRotation[0], node.endRotation[0], targetCos);
+                        //node.position.y = intermediateValue(startTime, currentTime, node.position.y, 0, targetParabola);
+                        //node.position.z = intermediateValue(startTime, currentTime, node.startRotation[2], node.endRotation[2], targetCos);
+                    }
                 }
                 var childTally = node.children.length;
                 if (childTally > 0) {
