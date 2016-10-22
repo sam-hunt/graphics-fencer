@@ -6,10 +6,28 @@
     <body>
         <script src="js/three.js"></script>
         <script>
+
+            // Sam Hunt 14216618
+
+            // Since there's no abstraction AT ALL for transitions or transformations and everything hinges on the cos wave,
+            // We need some pretty massive hacks to do non-co-wave stuff
+
+            // Ideally there would be a way to map transitions to their transformations, and different curve types would be 
+            // available to these and linked by a function pointer property inside the transition object etc
+            // the updater would pick the right transitions based on the time duration out of the total time 
+            // (instead of a proportionate time that goes above 1.0!!!) and apply these in order relative to the node tree
+
+            // Also applying a cos curve globablly to all rotations is terrible for the reason that you can't have multiple
+            // parts of the scene which move with different curve types AT THE SAME TIME.
+            // We abstract this a bit here by passing in the function we want to use, but its pretty bad without abstracted 
+            // transitions...
+
+            // I don't have time to implement this unfortunately due to capstone, so its dirty hack time now sorry. Here we go!!
+
             var scene = new THREE.Scene();
             scene.name = "Salle d'armes";
             scene.rotates = false;
-            var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 10000);
+            var camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 10000);
             var renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
@@ -139,39 +157,6 @@
             swordPommel     . offset  (swordTang    ,   0,  0.5,    0);
             swordPommel     . offset  (swordPommel  ,   0,  0.5,    0);
 
-        // Define the stages of the animation
-            var stages = [
-                {
-                    stageName   : "Lunge",
-                    stageStart  : 0,
-                    stageEnd    : 2000
-                },
-                {
-                    stageName   : "Horror",
-                    stageStart  : 2000,
-                    stageEnd    : 4000
-                },
-                {
-                    stageName   : "Recovery",
-                    stageStart  : 0,
-                    stageEnd    : 6000
-                }
-            ];
-
-        // Define the curves for the animation
-            function targetCos(proportion) {
-                return (Math.cos(proportion * Math.PI - Math.PI) + 1) / 2;
-            }
-            function targetCos2(proportion) {
-                return (Math.cos(-proportion * Math.PI - Math.PI) + 1) / 2;
-            }
-            function targetLinear(proportion) {
-                return proportion;
-            }
-            function targetParabola(proportion) {
-                return proportion * proportion;
-            }
-
 
         // SPECIFY THE START AND END ANGLES FOR THE INTERPOLATION
 
@@ -219,30 +204,117 @@
             camera.position.y = 1;
             camera.position.x = 0;
 
-            function intermediateValue(startTime, duration, startValue, endValue, level, targetFunction){
+
+            // Define the curves for the animation
+            function targetCos(proportion) {
+                return (Math.cos(proportion * Math.PI - Math.PI) + 1) / 2;
+            }
+            function targetLinear(proportion) {
+                return proportion;
+            }
+            function targetParabola(proportion) {
+                return proportion * proportion;
+            }
+
+            // Define the stages of the animation
+            var stages = [
+                {
+                    stageName   : "Lunges and recovers1",
+                    stageInit   : resetSwordParts,
+                    stageStart  : 0,
+                    stageEnd    : 3000,
+                    stageCurve  : targetCos
+                },
+                {
+                    stageName   : "Sword blade falls",
+                    stageInit   : detachSwordBlade,
+                    stageStart  : 3000,
+                    stageEnd    : 4000,
+                    stageCurve  : targetParabola
+                },
+                {
+                    stageName   : "Examines sword",
+                    stageStart  : 3000,
+                    stageEnd    : 6000
+                },
+                {
+                    stageName   : "Sword pommel & tang fall off",
+                    stageStart  : 4500,
+                    stageEnd    : 5500,
+                    stageCurve  : targetParabola
+                },
+                {
+                    stageName   : "Lunges and recovers2",
+                    stageStart  : 6000,
+                    stageEnd    : 9000,
+                    stageCurve  : targetCos
+                },
+                {
+                    stageName   : "Sword coquille falls off",
+                    stageStart  : 7500,
+                    stageEnd    : 9000,
+                    stageCurve  : targetParabola
+                }
+            ];
+
+            function totalStagesLength() {
+                var total = 0;
+                for (var i = 0; i < stages.length; i++) {
+                    total = Math.max(total, stages[i].stageEnd);
+                }
+                return total;
+            }
+            var duration = totalStagesLength();
+
+            function updateStages(currentTime) {
+                for (var i = 0; i < stages.length; i++) {
+                    total = Math.max(total, stages[i].stageEnd);
+                }
+            }
+
+            function resetSwordParts() {
+                swordTang.detached = false;
+                swordCoquille.detached = false;
+                swordBlade.detached = false;
+                swordPommel.detached = false;
+            }
+
+            function detachSwordBlade() {
+                swordBlade.detached = true;
+            }
+
+            var proportion;
+
+            function intermediateValue(startTime, currentTime, startValue, endValue, targetFunction){
                 /* alters the value of a parameter between two limits, 
                    from startValue to endValue and back again, with soft start and soft finish.
                 */
-                var now = new Date().getTime();
 
-                //
-                var proportion = ((now - startTime)%(duration*2)) / duration;
+                // Its too late for half measures!
+                var timeDiff = (currentTime - startTime)%9000;
 
 
-                var target = targetCos(proportion);
+                if ((timeDiff<3000)||(timeDiff>6000)) {
+                    proportion = timeDiff / 1500;
+                }
+
+
+                var target = targetFunction(proportion);
                 var intermediateValue = startValue + target * (endValue - startValue);
-        //        console.log("level: " + level + ". Got intermediate value of " + intermediateValue +" between " + startValue + " and " + endValue);
                 return intermediateValue;
             }
 
             function update(node, nodesToUpdate, level) {
-                //console.log("level: " + level + ". Potentially updating " + node.name + " at level " + level);
-        //        console.log("updating " + node.name + " " + node.rotates);
-                if  (node.rotates) {
+
+                
+
+                var currentTime = new Date().getTime();
+
+                if  (node.rotates && !node.detached) {
                     if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
-                        node.rotation.x = intermediateValue(startTime, duration, node.startRotation[0], node.endRotation[0], level);
-                        node.rotation.y = intermediateValue(startTime, duration, node.startRotation[1], node.endRotation[1], level);
-                        node.rotation.z = intermediateValue(startTime, duration, node.startRotation[2], node.endRotation[2], level);
+                        node.rotation.x = intermediateValue(startTime, currentTime, node.startRotation[0], node.endRotation[0], targetCos);
+                        node.rotation.y = intermediateValue(startTime, currentTime, node.startRotation[1], node.endRotation[1], targetCos);
+                        node.rotation.z = intermediateValue(startTime, currentTime, node.startRotation[2], node.endRotation[2], targetCos);
                     }
                     else {
                         node.rotation.x = node.startRotation[0];
@@ -256,25 +328,21 @@
                     for (var i = 0; i < childTally; i++) {
                         listOfChildren = listOfChildren + node.children[i].name + ", " ;
                     }
-        //            console.log("level: " + level + ". Node " + node.name + " has these children: " + listOfChildren);
                     for (var i = 0; i < childTally; i++) {
                         var child = node.children[i];
-        //                console.log("level: " + level + ". child has X rotation " + child.rotation.x);
-        //                console.log("level: " + level + ". recursive call to level " + (level + 1) + " to update " + child.name);
                         update(child, nodesToUpdate, level + 1);
                     }
                 }
             }
 
             var startTime = new Date().getTime();
-            var duration  = 2000;
 
             var nodesToUpdate = new Set();
             nodesToUpdate.add("all");
 
             function render() {
                 requestAnimationFrame(render);
-                scene.rotation.y +=0.005;       
+                //scene.rotation.y +=0.005;       
                 var axis = new THREE.Vector3(1, 0, 0).normalize();
                 update(scene, nodesToUpdate, 0);
                 renderer.render(scene, camera);
