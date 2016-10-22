@@ -10,11 +10,11 @@
             // Sam Hunt 14216618
 
             // Since there's no abstraction AT ALL for transitions or transformations and everything hinges on the cos wave,
-            // We need some pretty massive hacks to do non-co-wave stuff
+            // We need some pretty massive refactors/hacks to do non-co-wave stuff
 
             // Ideally there would be a way to map transitions to their transformations, and different curve types would be 
             // available to these and linked by a function pointer property inside the transition object etc
-            // the updater would pick the right transitions based on the time duration out of the total time 
+            // the updater would pick the right transitions based on the time intervals out of the total time 
             // (instead of a proportionate time that goes above 1.0!!!) and apply these in order relative to the node tree
 
             // Also applying a cos curve globablly to all rotations is terrible for the reason that you can't have multiple
@@ -22,7 +22,10 @@
             // We abstract this a bit here by passing in the function we want to use, but its pretty bad without abstracted 
             // transitions...
 
-            // I don't have time to implement this unfortunately due to capstone, so its dirty hack time now sorry. Here we go!!
+            // I've had a go at implementing this but I'm at my wits end, and really busy coming into the last week of capstone. 
+            // Detach doesn't work either, so its going to look crap in either case sorry....
+
+            // Please take a look at the bulk of my attempt in the second half of the file... Cheers
 
             var scene = new THREE.Scene();
             scene.name = "Salle d'armes";
@@ -205,7 +208,7 @@
             camera.position.x = 0;
 
 
-            // Define the curves for the animation
+            // Define the curve types for the animation
             function targetCos(proportion) {
                 return (Math.cos(proportion * Math.PI - Math.PI) + 1) / 2;
             }
@@ -217,6 +220,7 @@
             }
 
             // Define the stages of the animation
+            // This was very close to working!!
             var stages = [
                 {
                     stageName   : "Lunges and recovers1",
@@ -259,6 +263,7 @@
                 }
             ];
 
+            // Length of the total animations
             function totalStagesLength() {
                 var total = 0;
                 for (var i = 0; i < stages.length; i++) {
@@ -268,6 +273,8 @@
             }
             var duration = totalStagesLength();
 
+
+            // Update the transition interval states
             function updateStages(currentTime) {
                 var oldRelTime = (currentTime - startTime);
                 // Make sure we wrap around
@@ -295,44 +302,36 @@
                 }
             }
 
+            // Functions to execute as events on the transition create/die
             function resetSwordParts() {
                 swordTang.detached = false;
                 swordCoquille.detached = false;
                 swordBlade.detached = false;
                 swordPommel.detached = false;
             }
-
             function detachSwordBlade() {swordBlade.detached = true;}
             function detachSwordCoquille() {swordCoquille.detached = true;}
             function detachSwordPommel() {swordPommel.detached = true;}
 
             
-
+            // And now the hacky stuff because I couldn't get the cool stuff above implemented cleanly...
             var proportion;
 
             function intermediateValue(startTime, currentTime, startValue, endValue, targetFunction){
                 /* alters the value of a parameter between two limits, 
                    from startValue to endValue and back again, with soft start and soft finish.
                 */
-
-                // Its too late for half measures!
                 var timeDiff = (currentTime - startTime)%9000;
-
 
                 if ((timeDiff<3000)||(timeDiff>6000)) {
                     proportion = timeDiff / 1500;
                 }
-
-
                 var target = targetFunction(proportion);
                 var intermediateValue = startValue + target * (endValue - startValue);
                 return intermediateValue;
             }
 
             function update(node, nodesToUpdate, level) {
-
-                
-
                 var currentTime = new Date().getTime();
 
                 updateStages(currentTime);
@@ -350,9 +349,9 @@
                      }
                 }
                 if (node.detached) {
-                    {if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
+                    if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
                         //node.position.x = intermediateValue(startTime, currentTime, node.startRotation[0], node.endRotation[0], targetCos);
-                        //node.position.y = intermediateValue(startTime, currentTime, node.position.y, 0, targetParabola);
+                        node.position.y = intermediateValue(startTime, currentTime, node.position.y, 0, targetParabola);
                         //node.position.z = intermediateValue(startTime, currentTime, node.startRotation[2], node.endRotation[2], targetCos);
                     }
                 }
