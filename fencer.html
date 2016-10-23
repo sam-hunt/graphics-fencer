@@ -219,101 +219,109 @@
                 return proportion * proportion;
             }
 
-            // Define the stages of the animation
-            // This was very close to working!!
-            var stages = [
+            // Define the anims of the animation
+            // This is very close to working!!
+            var anims = [
                 {
-                    stageName   : "Lunges and recovers1",
-                    stageStart  : 0,
-                    stageEnd    : 3000,
-                    stageCurve  : targetCos
+                    animName   :    "Lunges and recovers1",
+                    animStart  :    0,
+                    animEnd    :    3000,
+                    animCurve  :    targetCos
                 },
                 {
-                    stageName   : "Sword blade falls",
-                    stageInit   : detachSwordBlade,
-                    stageStart  : 3000,
-                    stageEnd    : 4000,
-                    stageCurve  : targetParabola
+                    animName   :    "Sword blade falls",
+                    animInit   :    function () {
+                                        THREE.SceneUtils.detach(swordBlade, swordTang, scene);
+                                        swordTang.updateMatrixWorld();
+                                        swordBlade.updateMatrixWorld();
+                                        swordBlade.detached = true;
+                                    },
+                    animStart  :    1500,
+                    animEnd    :    2500,
+                    animCurve  :    targetParabola
                 },
                 {
-                    stageName   : "Examines sword",
-                    stageStart  : 3000,
-                    stageEnd    : 6000
+                    animName   :    "Examines sword",
+                    animStart  :    3000,
+                    animEnd    :    6000
                 },
                 {
-                    stageName   : "Sword pommel & tang fall off",
-                    stageInit   : detachSwordPommel,
-                    stageStart  : 4500,
-                    stageEnd    : 5500,
-                    stageCurve  : targetParabola
+                    animName   :    "Sword pommel & tang fall off",
+                    animInit   :    function () {
+                                        THREE.SceneUtils.detach(swordTang, swordHandle, scene);
+                                        swordTang.updateMatrixWorld();
+                                        swordBlade.updateMatrixWorld();
+                                        swordTang.detached = true;
+                                    },
+                    animStart  :    4500,
+                    animEnd    :    5500,
+                    animCurve  :    targetParabola
                 },
                 {
-                    stageName   : "Lunges and recovers2",
-                    stageStart  : 6000,
-                    stageEnd    : 9000,
-                    stageCurve  : targetCos
+                    animName   :    "Lunges and recovers2",
+                    animStart  :    6000,
+                    animEnd    :    9000,
+                    animCurve  :    targetCos
                 },
                 {
-                    stageName   : "Sword coquille falls off",
-                    stageInit   : detachSwordCoquille,
-                    stageDestroy: resetSwordParts,
-                    stageStart  : 7500,
-                    stageEnd    : 9000,
-                    stageCurve  : targetParabola
+                    animName   :    "Sword coquille falls off",
+                    animInit   :    function () {
+                                        THREE.SceneUtils.detach(swordCoquille, swordHandle, scene);
+                                        swordHandle.updateMatrixWorld();
+                                        swordCoquille.updateMatrixWorld();
+                                        
+                                        swordCoquille.detached = true;
+                                    },
+                    animDestroy:    function () {
+                                        swordTang.detached = false;
+                                        swordCoquille.detached = false;
+                                        swordBlade.detached = false;
+                                    },
+                    animStart  :    7500,
+                    animEnd    :    9000,
+                    animCurve  :    targetParabola
                 }
             ];
 
             // Length of the total animations
-            function totalStagesLength() {
+            function totalanimsLength() {
                 var total = 0;
-                for (var i = 0; i < stages.length; i++) {
-                    total = Math.max(total, stages[i].stageEnd);
+                for (var i = 0; i < anims.length; i++) {
+                    total = Math.max(total, anims[i].animEnd);
                 }
                 return total;
             }
-            var duration = totalStagesLength();
+            var duration = totalanimsLength();
 
 
             // Update the transition interval states
-            function updateStages(currentTime) {
+            function updateanims(currentTime) {
                 var oldRelTime = (currentTime - startTime);
                 // Make sure we wrap around
                 var relTime = oldRelTime % duration;
 
-                // First close old stages
-                for (var i = 0; i < stages.length; i++) {
-                    if (((oldRelTime >= stages[i].stageEnd) || (oldRelTime <= stages[i].stageStart)) && (stages[i].active)) {
-                        stages[i].active = false;
-                        console.log(stages[i].stageName + " ending");
-                        if (stages[i].stageDestroy) {
-                            stages[i].stageDestroy();
+                // First close old anims
+                for (var i = 0; i < anims.length; i++) {
+                    if (((oldRelTime >= anims[i].animEnd) || (oldRelTime <= anims[i].animStart)) && (anims[i].active)) {
+                        anims[i].active = false;
+                        console.log(anims[i].animName + " ending");
+                        if (anims[i].animDestroy) {
+                            anims[i].animDestroy();
                         }
                     }
                 }
-                // Then open the new stages
-                for (var i = 0; i < stages.length; i++) {
-                    if (((relTime > stages[i].stageStart) && (relTime < stages[i].stageEnd)) && (!stages[i].active)) {
-                        console.log(stages[i].stageName + " starting");
-                        stages[i].active = true;
-                        if (stages[i].stageInit) {
-                            stages[i].stageInit();
+                // Then open the new anims
+                for (var i = 0; i < anims.length; i++) {
+                    if (((relTime > anims[i].animStart) && (relTime < anims[i].animEnd)) && (!anims[i].active)) {
+                        console.log(anims[i].animName + " starting");
+                        anims[i].active = true;
+                        if (anims[i].animInit) {
+                            anims[i].animInit();
                         }
                     }
                 }
             }
 
-            // Functions to execute as events on the transition create/die
-            function resetSwordParts() {
-                swordTang.detached = false;
-                swordCoquille.detached = false;
-                swordBlade.detached = false;
-                swordPommel.detached = false;
-            }
-            function detachSwordBlade() {swordBlade.detached = true;}
-            function detachSwordCoquille() {swordCoquille.detached = true;}
-            function detachSwordPommel() {swordPommel.detached = true;}
-
-            
             // And now the hacky stuff because I couldn't get the cool stuff above implemented cleanly...
             var proportion;
 
@@ -334,7 +342,7 @@
             function update(node, nodesToUpdate, level) {
                 var currentTime = new Date().getTime();
 
-                updateStages(currentTime);
+                updateanims(currentTime);
 
                 if  (node.rotates && !node.detached) {
                     if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
@@ -348,13 +356,9 @@
                         node.rotation.z = node.startRotation[2];
                      }
                 }
-                if (node.detached) {
-                    if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
-                        //node.position.x = intermediateValue(startTime, currentTime, node.startRotation[0], node.endRotation[0], targetCos);
-                        node.position.y = intermediateValue(startTime, currentTime, node.position.y, 0, targetParabola);
-                        //node.position.z = intermediateValue(startTime, currentTime, node.startRotation[2], node.endRotation[2], targetCos);
-                    }
-                }
+                // if (node.detached) {
+                //     node.position.y = intermediateValue(startTime, currentTime, node.position.y, 0, targetParabola);
+                // }
                 var childTally = node.children.length;
                 if (childTally > 0) {
                     var listOfChildren = "";
