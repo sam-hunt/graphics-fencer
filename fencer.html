@@ -69,144 +69,168 @@
                 return(bodyPart);
             }
 
-        // MAKE THE BODY PARTS AND JOINTS
-            var backFoot      = newBodyPart("Back foot",0.25, 0.25, 0.75, false);  
-            var backAnkle     = newBodyPart("Back ankle"    , 0, 0, 0, true);  var backCalf      = newBodyPart ( "Back calf",  0.25,    1, 0.25, false); 
-            var backKnee      = newBodyPart("Back knee"     , 0, 0, 0, true);  var backThigh     = newBodyPart ( "Back thigh", 0.35,    1, 0.35, false);    
-            var backHip       = newBodyPart("Back hip"      , 0, 0, 0, true);  var torso         = newBodyPart ( "torso",       0.6,    1,  0.4, false); 
-            var neck          = newBodyPart("neck"          , 0, 0, 0, true);  var realNeck      = newBodyPart ( "Real neck",   0.3,  0.3,  0.2, false);
-                                                                               var head          = newBodyPart ( "Head",        0.4,  0.5, 0.35, false);    
-            var frontHip      = newBodyPart("Front hip"     , 0, 0, 0, true);
-            var frontHip2     = newBodyPart("Front hip 2"   , 0, 0, 0, true);  var frontThigh   = newBodyPart ( "Front thigh", 0.35,    1, 0.35, false); 
-            var frontKnee     = newBodyPart("Front knee"    , 0, 0, 0, true);  var frontCalf    = newBodyPart ( "Front calf",  0.25,    1, 0.25, false); 
-            var frontAnkle    = newBodyPart("Front ankle"   , 0, 0, 0, true);  var frontFoot    = newBodyPart ( "Front foot",  0.25, 0.25, 0.75, false);
+        // Define the body parts in scope
+            var backFoot, backAnkle, backCalf, backKnee, backThigh, backHip, torso, neck, realNeck, head;
+            var frontHip, frontHip2, frontKnee, frontAnkle, frontThigh, frontCalf, frontFoot;
+            var backShoulder, backElbow, backWrist, backBicep, backForearm, backHand;
+            var frontShoulder, frontBicep, frontElbow, frontForearm, frontWrist, frontHand, frontFingers;
 
-            var backShoulder  = newBodyPart("Back shoulder" , 0, 0, 0, true);  var backBicep    = newBodyPart ( "Back bicep", 0.25,    1, 0.25, false);
-            var backElbow     = newBodyPart("Back elbow"    , 0, 0, 0, true);  var backForearm  = newBodyPart ( "Back forearm",0.2,  0.7,  0.2, false);
-            var backWrist     = newBodyPart("Back wrist"    , 0, 0, 0, true);  var backHand     = newBodyPart ( "Back hand",   0.3,  0.3,  0.1, false);
+            var geometry, material, piste;
+            var originGeo, originMat, origin;
 
-            var frontShoulder = newBodyPart("Front shoulder", 0, 0, 0, true);  var frontBicep   = newBodyPart ("Front bicep",  0.25,   1, 0.25, false);
-            var frontElbow    = newBodyPart("Front elbow"   , 0, 0, 0, true);  var frontForearm = newBodyPart ("Front forearm", 0.2, 0.7,  0.2, false);
-            var frontWrist    = newBodyPart("Front wrist"   , 0, 0, 0, true);  var frontHand    = newBodyPart ("Front hand",    0.3, 0.3,  0.1, false);
-            var frontFingers  = newBodyPart("Front fingers" , 0, 0, 0, true);  
+            var swordHandle, swordTang, swordPommel, swordBlade, swordCoquille;
 
-            // Model the sword
-            var swordHandle   = newBodyPart ("Sword handle"     ,0.15,  0.5,    0.15,   false, true);
-            var swordTang     = newBodyPart ("Sword tang"       ,0.03,  0.5,    0.03,   false, true);
-            var swordPommel   = newBodyPart ("Sword pommel"     ,0.18,  0.12,   0.18,   false, true);
-            var swordBlade    = newBodyPart ("Sword blade"      ,0.05,  2.25,   0.05,   false, true);
-            var swordCoquille = newBodyPart ("Sword coquille"   ,0.4,   0.05,   0.4,    false, true);
+            function setupSwordOffsets() {
+                
+                
+                swordCoquille   . offset  (swordHandle  ,   0,  -0.5,    0);
+                swordBlade      . offset  (swordTang    ,   0,  -0.5,    0);
+                
+                swordPommel     . offset  (swordTang    ,   0,  0.5,    0);
+                
+                scene.updateMatrixWorld();
+            }
 
-        // CONNECT THEM TOGETHER
-            
-            scene          . add (backFoot    );    backFoot      . add (backAnkle    ); 
-            backAnkle      . add (backCalf    );    backCalf      . add (backKnee     );
-            backKnee       . add (backThigh   );    backThigh     . add (backHip      );
-            backHip        . add (torso       );    torso         . add (neck         );
-            neck           . add (realNeck    );
-            realNeck       . add (head        );
+            function setupScene() {
+            // MAKE THE BODY PARTS AND JOINTS
+                backFoot      = newBodyPart("Back foot"     ,0.25, 0.25, 0.75, false);  
+                backAnkle     = newBodyPart("Back ankle"    , 0, 0, 0, true);  backCalf      = newBodyPart ( "Back calf",  0.25,    1, 0.25, false); 
+                backKnee      = newBodyPart("Back knee"     , 0, 0, 0, true);  backThigh     = newBodyPart ( "Back thigh", 0.35,    1, 0.35, false);    
+                backHip       = newBodyPart("Back hip"      , 0, 0, 0, true);  torso         = newBodyPart ( "torso",       0.6,    1,  0.4, false); 
+                neck          = newBodyPart("neck"          , 0, 0, 0, true);  realNeck      = newBodyPart ( "Real neck",   0.3,  0.3,  0.2, false);
+                head          = newBodyPart ( "Head",        0.4,  0.5, 0.35, false);    
 
-            neck           . add (head        );    torso         . add (frontHip      );
-            frontHip       . add (frontHip2   );
-            frontHip2      . add (frontThigh  );    frontThigh    . add (frontKnee    );
-            frontKnee      . add (frontCalf   );    frontCalf     . add (frontAnkle   );
-            frontAnkle     . add (frontFoot   );   
-                                                    torso         . add (backShoulder );
-            backShoulder   . add (backBicep   );    backBicep     . add (backElbow    );
-            backElbow      . add (backForearm );    backForearm   . add (backWrist    );
-            backWrist      . add (backHand    );  
-            
-                                                    torso         . add (frontShoulder );
-            frontShoulder  . add (frontBicep   );   frontBicep    . add (frontElbow    );
-            frontElbow     . add (frontForearm );   frontForearm  . add (frontWrist    );
-            frontWrist     . add (frontHand    );   frontHand     . add (frontFingers  );
-            
-            // Create the sword hierarchy
-            frontFingers   . add (swordHandle   );
-            swordHandle    . add (swordTang     );
-            swordHandle    . add (swordCoquille );
-            swordTang      . add (swordBlade    );
-            swordTang      . add (swordPommel   );
+                frontHip      = newBodyPart("Front hip"     , 0, 0, 0, true);
+                frontHip2     = newBodyPart("Front hip 2"   , 0, 0, 0, true);  frontThigh   = newBodyPart ( "Front thigh", 0.35,    1, 0.35, false); 
+                frontKnee     = newBodyPart("Front knee"    , 0, 0, 0, true);  frontCalf    = newBodyPart ( "Front calf",  0.25,    1, 0.25, false); 
+                frontAnkle    = newBodyPart("Front ankle"   , 0, 0, 0, true);  frontFoot    = newBodyPart ( "Front foot",  0.25, 0.25, 0.75, false);
 
+                backShoulder  = newBodyPart("Back shoulder" , 0, 0, 0, true);  backBicep    = newBodyPart ( "Back bicep", 0.25,    1, 0.25, false);
+                backElbow     = newBodyPart("Back elbow"    , 0, 0, 0, true);  backForearm  = newBodyPart ( "Back forearm",0.2,  0.7,  0.2, false);
+                backWrist     = newBodyPart("Back wrist"    , 0, 0, 0, true);  backHand     = newBodyPart ( "Back hand",   0.3,  0.3,  0.1, false);
 
-        // POSE THEM
-            backFoot      . offset  (backFoot    , -30,     1,    0);      
-            backAnkle     .offset (backFoot    ,    0,  0.5, 0.5 ); backCalf       . offset  (backCalf    ,   0,   0.5, -0.5);  
-            backKnee      .offset (backCalf    ,    0,  0.5,   0 ); backThigh      . offset  (backThigh   ,   0,   0.5,    0);      
-            backHip       .offset (backThigh   ,    0,  0.5,   0 ); torso          . offset  (torso       , 0.3,   0.5,    0);  
+                frontShoulder = newBodyPart("Front shoulder", 0, 0, 0, true);  frontBicep   = newBodyPart ("Front bicep",  0.25,   1, 0.25, false);
+                frontElbow    = newBodyPart("Front elbow"   , 0, 0, 0, true);  frontForearm = newBodyPart ("Front forearm", 0.2, 0.7,  0.2, false);
+                frontWrist    = newBodyPart("Front wrist"   , 0, 0, 0, true);  frontHand    = newBodyPart ("Front hand",    0.3, 0.3,  0.1, false);
+                frontFingers  = newBodyPart("Front fingers" , 0, 0, 0, true);  
 
-            neck          .offset (torso       ,    0,  0.5, 0.25); realNeck       . offset  (realNeck    ,   0,   0.5,    0); 
-                                                                    head           . offset  (head        ,   0,  0.75,-0.25);      
-            frontHip      .offset (torso       ,  0.3, -0.5,   0 ); 
-            frontHip2     .offset (torso       ,    0,    0,   0 );
-                                                                      frontThigh   . offset  (frontThigh  ,   0,  -0.5,    0);      
-            frontKnee     .offset (frontThigh  ,    0, -0.5,   0 );   frontCalf    . offset  (frontCalf   ,   0,  -0.5,    0);
-            frontAnkle    .offset (frontCalf   ,    0, -0.5, 0.5 );   frontFoot    . offset  (frontFoot   ,   0,    -1, -0.5);
+                // Model the sword
+                swordHandle   = newBodyPart ("Sword handle"     ,0.15,  0.5,    0.15,   false, true);
+                swordTang     = newBodyPart ("Sword tang"       ,0.03,  0.5,    0.03,   false, true);
+                swordPommel   = newBodyPart ("Sword pommel"     ,0.18,  0.12,   0.18,   false, true);
+                swordBlade    = newBodyPart ("Sword blade"      ,0.05,  2.25,   0.05,   false, true);
+                swordCoquille = newBodyPart ("Sword coquille"   ,0.4,   0.05,   0.4,    false, true);
 
-            backShoulder  .offset(torso        , -0.5,  0.5,   0 );   backBicep    . offset  (backBicep   , -0.5,  -0.5,    0);
-            backElbow     .offset(backBicep    ,    0, -0.5,   0 );   backForearm  . offset  (backForearm ,   0,  -0.5,    0);
-            backWrist     .offset(backForearm  ,    0, -0.5,   0 );   backHand     . offset  (backHand    ,   0,  -0.5,    0)
+            // CONNECT THEM TOGETHER
+                
+                scene          . add (backFoot    );    backFoot      . add (backAnkle    ); 
+                backAnkle      . add (backCalf    );    backCalf      . add (backKnee     );
+                backKnee       . add (backThigh   );    backThigh     . add (backHip      );
+                backHip        . add (torso       );    torso         . add (neck         );
+                neck           . add (realNeck    );
+                realNeck       . add (head        );
 
-            frontShoulder .offset(torso        ,  0.5,  0.5,   0 );   frontBicep   . offset  (frontBicep  , 0.5,  -0.5,    0);
-            frontElbow    .offset(frontBicep   ,    0, -0.5,   0 );   frontForearm . offset  (frontForearm,   0,  -0.5,    0);
-            frontWrist    .offset(frontForearm ,    0, -0.5,   0 );   frontHand    . offset  (frontHand   ,   0,  -0.5,    0);
-            frontFingers  .offset(frontHand    ,    0, -0.5,   0 );   
-
-            swordHandle     . offset  (swordHandle  ,   0,  0.2,    0);
-            swordTang       . offset  (swordTang    ,   0,  0,    0);
-            swordCoquille   . offset  (swordHandle  ,   0,  -0.5,    0);
-            swordBlade      . offset  (swordTang    ,   0,  -0.5,    0);
-            swordBlade      . offset  (swordBlade   ,   0,  -0.5,    0);
-            swordPommel     . offset  (swordTang    ,   0,  0.5,    0);
-            swordPommel     . offset  (swordPommel  ,   0,  0.5,    0);
+                neck           . add (head        );    torso         . add (frontHip      );
+                frontHip       . add (frontHip2   );
+                frontHip2      . add (frontThigh  );    frontThigh    . add (frontKnee    );
+                frontKnee      . add (frontCalf   );    frontCalf     . add (frontAnkle   );
+                frontAnkle     . add (frontFoot   );   
+                                                        torso         . add (backShoulder );
+                backShoulder   . add (backBicep   );    backBicep     . add (backElbow    );
+                backElbow      . add (backForearm );    backForearm   . add (backWrist    );
+                backWrist      . add (backHand    );  
+                
+                                                        torso         . add (frontShoulder );
+                frontShoulder  . add (frontBicep   );   frontBicep    . add (frontElbow    );
+                frontElbow     . add (frontForearm );   frontForearm  . add (frontWrist    );
+                frontWrist     . add (frontHand    );   frontHand     . add (frontFingers  );
+                
+                // Create the sword hierarchy
+                frontFingers   . add (swordHandle   );
+                swordHandle    . add (swordTang     );
+                swordHandle    . add (swordCoquille );
+                swordTang      . add (swordBlade    );
+                swordTang      . add (swordPommel   );
 
 
-        // SPECIFY THE START AND END ANGLES FOR THE INTERPOLATION
+            // POSE THEM
+                backFoot      . offset  (backFoot    , -30,     1,    0);      
+                backAnkle     .offset (backFoot    ,    0,  0.5, 0.5 ); backCalf       . offset  (backCalf    ,   0,   0.5, -0.5);  
+                backKnee      .offset (backCalf    ,    0,  0.5,   0 ); backThigh      . offset  (backThigh   ,   0,   0.5,    0);      
+                backHip       .offset (backThigh   ,    0,  0.5,   0 ); torso          . offset  (torso       , 0.3,   0.5,    0);  
 
-            scene         . startRotation    = [    0,    0,    0 ];    scene         . endRotation = [   0,    3,     0];
-            backAnkle     . startRotation    = [    0,    0,  -0.2];    backAnkle     . endRotation = [   0,    0,  -1.2]; 
-            backKnee      . startRotation    = [  0.2,    0,     0];    backKnee      . endRotation = [   0,    0,     0];
-            backHip       . startRotation    = [ -0.3,    0,   0.3];    backHip       . endRotation = [ 0.2,    0,   1.2];
-            neck          . startRotation    = [    0,  0.3,     0];    neck          . endRotation = [   0,  0.3,     0]; 
-            frontHip      . startRotation    = [    0, -1.3,     0];    frontHip      . endRotation = [   0, -1.3,     0];
-            frontHip2     . startRotation    = [  0.4,    0,     0];    frontHip2     . endRotation = [ 1.95,    0,    0];
-            frontKnee     . startRotation    = [ -0.3,    0,     0];    frontKnee     . endRotation = [ -1.9,   0,     0];
-            frontAnkle    . startRotation    = [ -0.2,    0,     0];    frontAnkle    . endRotation = [-0.1,    0,     0];   
-            backShoulder  . startRotation    = [   0,     0,  -0.5];    backShoulder  . endRotation = [   0,    0,  -1.5];
-            backElbow     . startRotation    = [    0,    0,  -1.8];    backElbow     . endRotation = [   0,    0,     0];
-            backWrist     . startRotation    = [    0,    0,  -1.5];    backWrist     . endRotation = [   0,    0,     0];
-            frontShoulder . startRotation    = [    0,    0,   0.5];    frontShoulder . endRotation = [   0,    0,   1.7];
-            frontElbow    . startRotation    = [    0,    0,   1.2];    frontElbow    . endRotation = [   0,    0,     0];
-            frontWrist    . startRotation    = [    0,    0,     0];    frontWrist    . endRotation = [   0,    0,     0];
-            frontFingers  . startRotation    = [    0,    0,   0.1];    frontFingers  . endRotation = [   0,    0,     0];
+                neck          .offset (torso       ,    0,  0.5, 0.25); realNeck       . offset  (realNeck    ,   0,   0.5,    0); 
+                                                                        head           . offset  (head        ,   0,  0.75,-0.25);      
+                frontHip      .offset (torso       ,  0.3, -0.5,   0 ); 
+                frontHip2     .offset (torso       ,    0,    0,   0 );
+                                                                          frontThigh   . offset  (frontThigh  ,   0,  -0.5,    0);      
+                frontKnee     .offset (frontThigh  ,    0, -0.5,   0 );   frontCalf    . offset  (frontCalf   ,   0,  -0.5,    0);
+                frontAnkle    .offset (frontCalf   ,    0, -0.5, 0.5 );   frontFoot    . offset  (frontFoot   ,   0,    -1, -0.5);
 
-            // Sword stuff
-            swordHandle    . startRotation    = [    0,    0,   0];    swordHandle    . endRotation = [   0,    0,     0];
-            swordTang      . startRotation    = [    0,    0,   0];    swordTang      . endRotation = [   0,    0,     0];
-            swordCoquille  . startRotation    = [    0,    0,   0];    swordCoquille  . endRotation = [   0,    0,     0];
-            swordBlade     . startRotation    = [    0,    0,   0];    swordBlade     . endRotation = [   0,    0,     0];
-            swordPommel    . startRotation    = [    0,    0,   0];    swordPommel    . endRotation = [   0,    0,     0];
+                backShoulder  .offset(torso        , -0.5,  0.5,   0 );   backBicep    . offset  (backBicep   , -0.5,  -0.5,    0);
+                backElbow     .offset(backBicep    ,    0, -0.5,   0 );   backForearm  . offset  (backForearm ,   0,  -0.5,    0);
+                backWrist     .offset(backForearm  ,    0, -0.5,   0 );   backHand     . offset  (backHand    ,   0,  -0.5,    0)
 
-            // Add the platform
-            var geometry = new THREE.BoxGeometry(20, 0.2, 4, 10, 10, 10);
-            var material = new THREE.MeshBasicMaterial({color: 0x0f0f0f, wireframe: false});
-            var piste = new THREE.Mesh(geometry, material);
-            piste.name = "piste";
-            piste.rotates = false;
-            scene.add(piste);
+                frontShoulder .offset(torso        ,  0.5,  0.5,   0 );   frontBicep   . offset  (frontBicep  , 0.5,  -0.5,    0);
+                frontElbow    .offset(frontBicep   ,    0, -0.5,   0 );   frontForearm . offset  (frontForearm,   0,  -0.5,    0);
+                frontWrist    .offset(frontForearm ,    0, -0.5,   0 );   frontHand    . offset  (frontHand   ,   0,  -0.5,    0);
+                frontFingers  .offset(frontHand    ,    0, -0.5,   0 );   
 
-            // Add a marker for the origin
-            var originGeo = new THREE.SphereGeometry(0.3, 6,6);
-            var originMat = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: false});
-            var origin = new THREE.Mesh(originGeo, originMat);
-            origin.name = "origin";
-            origin.rotates = false;
-            scene.add(origin);
+                swordHandle     . offset  (swordHandle  ,   0,  0.2,    0);
+                swordTang       . offset  (swordTang    ,   0,  0,    0);
+                swordBlade      . offset  (swordBlade   ,   0,  -0.5,    0);
+                swordPommel     . offset  (swordPommel  ,   0,  0.5,    0);
 
-            camera.position.z = 10;        
-            camera.position.y = 1;
-            camera.position.x = 0;
+                setupSwordOffsets();
 
+
+            // SPECIFY THE START AND END ANGLES FOR THE INTERPOLATION
+
+                scene         . startRotation    = [    0,    0,    0 ];    scene         . endRotation = [   0,    3,     0];
+                backAnkle     . startRotation    = [    0,    0,  -0.2];    backAnkle     . endRotation = [   0,    0,  -1.2]; 
+                backKnee      . startRotation    = [  0.2,    0,     0];    backKnee      . endRotation = [   0,    0,     0];
+                backHip       . startRotation    = [ -0.3,    0,   0.3];    backHip       . endRotation = [ 0.2,    0,   1.2];
+                neck          . startRotation    = [    0,  0.3,     0];    neck          . endRotation = [   0,  0.3,     0]; 
+                frontHip      . startRotation    = [    0, -1.3,     0];    frontHip      . endRotation = [   0, -1.3,     0];
+                frontHip2     . startRotation    = [  0.4,    0,     0];    frontHip2     . endRotation = [ 1.95,    0,    0];
+                frontKnee     . startRotation    = [ -0.3,    0,     0];    frontKnee     . endRotation = [ -1.9,   0,     0];
+                frontAnkle    . startRotation    = [ -0.2,    0,     0];    frontAnkle    . endRotation = [-0.1,    0,     0];   
+                backShoulder  . startRotation    = [   0,     0,  -0.5];    backShoulder  . endRotation = [   0,    0,  -1.5];
+                backElbow     . startRotation    = [    0,    0,  -1.8];    backElbow     . endRotation = [   0,    0,     0];
+                backWrist     . startRotation    = [    0,    0,  -1.5];    backWrist     . endRotation = [   0,    0,     0];
+                frontShoulder . startRotation    = [    0,    0,   0.5];    frontShoulder . endRotation = [   0,    0,   1.7];
+                frontElbow    . startRotation    = [    0,    0,   1.2];    frontElbow    . endRotation = [   0,    0,     0];
+                frontWrist    . startRotation    = [    0,    0,     0];    frontWrist    . endRotation = [   0,    0,     0];
+                frontFingers  . startRotation    = [    0,    0,   0.1];    frontFingers  . endRotation = [   0,    0,     0];
+
+                // Sword stuff
+                swordHandle    . startRotation    = [    0,    0,   0];    swordHandle    . endRotation = [   0,    0,     0];
+                swordTang      . startRotation    = [    0,    0,   0];    swordTang      . endRotation = [   0,    0,     0];
+                swordCoquille  . startRotation    = [    0,    0,   0];    swordCoquille  . endRotation = [   0,    0,     0];
+                swordBlade     . startRotation    = [    0,    0,   0];    swordBlade     . endRotation = [   0,    0,     0];
+                swordPommel    . startRotation    = [    0,    0,   0];    swordPommel    . endRotation = [   0,    0,     0];
+
+                // Add the platform
+                geometry = new THREE.BoxGeometry(20, 0.2, 4, 10, 10, 10);
+                material = new THREE.MeshBasicMaterial({color: 0x0f0f0f, wireframe: false});
+                piste = new THREE.Mesh(geometry, material);
+                piste.name = "piste";
+                piste.rotates = false;
+                scene.add(piste);
+
+                // Add a marker for the origin
+                originGeo = new THREE.SphereGeometry(0.3, 6,6);
+                originMat = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: false});
+                origin = new THREE.Mesh(originGeo, originMat);
+                origin.name = "origin";
+                origin.rotates = false;
+                scene.add(origin);
+
+                camera.position.z = 10;        
+                camera.position.y = 1;
+                camera.position.x = 0;
+            }
+            setupScene();
 
             // Define the curve types for the animation
             function targetCos(proportion) {
@@ -217,6 +241,29 @@
             }
             function targetParabola(proportion) {
                 return proportion * proportion;
+            }
+
+            function reattachNode(child, parent) {
+                child.detached = false;
+                THREE.SceneUtils.attach(child, scene, parent);
+                child.updateMatrixWorld();
+                parent.updateMatrixWorld();
+                child.position.x = parent.position.x;
+                child.position.y = parent.position.y;
+                child.position.z = parent.position.z;
+                child.rotation.x = parent.rotation.x;
+                child.rotation.y = parent.rotation.y;
+                child.rotation.z = parent.rotation.z;
+            }
+
+            function dropAllChildren() {
+                var obj, i;
+                for ( i = scene.children.length - 1; i >= 0 ; i -- ) {
+                    obj = scene.children[ i ];
+                    if (obj !== camera) {
+                        scene.remove(obj);
+                    }
+                }
             }
 
             // Define the anims of the animation
@@ -269,13 +316,15 @@
                                         THREE.SceneUtils.detach(swordCoquille, swordHandle, scene);
                                         swordHandle.updateMatrixWorld();
                                         swordCoquille.updateMatrixWorld();
-                                        
                                         swordCoquille.detached = true;
                                     },
                     animDestroy:    function () {
-                                        swordTang.detached = false;
-                                        swordCoquille.detached = false;
-                                        swordBlade.detached = false;
+                                        reattachNode(swordTang, swordHandle);
+                                        reattachNode(swordCoquille, swordHandle);
+                                        reattachNode(swordBlade, swordTang);
+                                        setupSwordOffsets();
+                                        //dropAllChildren();
+                                        //setupScene();
                                     },
                     animStart  :    7500,
                     animEnd    :    9000,
