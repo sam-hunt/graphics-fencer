@@ -23,8 +23,7 @@
             // transitions...
 
             // I've had a go at implementing this but I'm at my wits end, and really busy coming into the last week of capstone. 
-            // Detach doesn't work either, so its going to look crap in either case sorry....
-
+           
             // Please take a look at the bulk of my attempt in the second half of the file... Cheers
 
             var scene = new THREE.Scene();
@@ -35,7 +34,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            function newBodyPart(name, width, height, depth, rotates, opaque) {
+            function newBodyPart(name, width, height, depth, rotates, translates, opaque) {
                 if (rotates) {
                     var bodyPart = Object.create(new THREE.Object3D());
                 }
@@ -58,10 +57,7 @@
                     xOffset = xFraction * node.geometry.parameters.width;
                     yOffset = yFraction * node.geometry.parameters.height;
                     zOffset = zFraction * node.geometry.parameters.depth;
-                    /*console.log( "called offset with fractional offsets (" + xFraction + ", " + yFraction + ", " + zFraction + ") "
-                         + "and absolute offsets of (" + xOffset  + ", " + yOffset + ", " + zOffset
-                         );
-                    */
+
                     this.position.x += xOffset;
                     this.position.y += yOffset;
                     this.position.z += zOffset;
@@ -80,14 +76,12 @@
 
             var swordHandle, swordTang, swordPommel, swordBlade, swordCoquille;
 
+            // This needs to be repeatable for when we return the sword to the hand
             function setupSwordOffsets() {
-                
-                
-                swordCoquille   . offset  (swordHandle  ,   0,  -0.5,    0);
+                swordBlade     . offset  (swordCoquille  ,   0,  -0.5,    0);
                 swordBlade      . offset  (swordTang    ,   0,  -0.5,    0);
-                
-                swordPommel     . offset  (swordTang    ,   0,  0.5,    0);
-                
+                swordBlade      . offset  (swordBlade   ,   0,  -0.5,    0);
+                swordCoquille   . offset  (swordHandle  ,   0,  -0.5,    0);
                 scene.updateMatrixWorld();
             }
 
@@ -115,11 +109,11 @@
                 frontFingers  = newBodyPart("Front fingers" , 0, 0, 0, true);  
 
                 // Model the sword
-                swordHandle   = newBodyPart ("Sword handle"     ,0.15,  0.5,    0.15,   false, true);
-                swordTang     = newBodyPart ("Sword tang"       ,0.03,  0.5,    0.03,   false, true);
-                swordPommel   = newBodyPart ("Sword pommel"     ,0.18,  0.12,   0.18,   false, true);
-                swordBlade    = newBodyPart ("Sword blade"      ,0.05,  2.25,   0.05,   false, true);
-                swordCoquille = newBodyPart ("Sword coquille"   ,0.4,   0.05,   0.4,    false, true);
+                swordHandle   = newBodyPart ("Sword handle"     ,0.15,  0.5,    0.15,   false, false, true);
+                swordTang     = newBodyPart ("Sword tang"       ,0.03,  0.5,    0.03,   false, true, true);
+                swordPommel   = newBodyPart ("Sword pommel"     ,0.18,  0.12,   0.18,   false, false, true);
+                swordBlade    = newBodyPart ("Sword blade"      ,0.05,  2.25,   0.05,   false, true, true);
+                swordCoquille = newBodyPart ("Sword coquille"   ,0.4,   0.05,   0.4,    false, true, true);
 
             // CONNECT THEM TOGETHER
                 
@@ -178,13 +172,15 @@
 
                 swordHandle     . offset  (swordHandle  ,   0,  0.2,    0);
                 swordTang       . offset  (swordTang    ,   0,  0,    0);
-                swordBlade      . offset  (swordBlade   ,   0,  -0.5,    0);
                 swordPommel     . offset  (swordPommel  ,   0,  0.5,    0);
+                swordPommel     . offset  (swordTang    ,   0,  0.5,    0);
 
                 setupSwordOffsets();
 
 
             // SPECIFY THE START AND END ANGLES FOR THE INTERPOLATION
+
+                // Ideally all of this would be abstracted to the transition/animation objects too but there's no time for that!
 
                 scene         . startRotation    = [    0,    0,    0 ];    scene         . endRotation = [   0,    3,     0];
                 backAnkle     . startRotation    = [    0,    0,  -0.2];    backAnkle     . endRotation = [   0,    0,  -1.2]; 
@@ -233,47 +229,47 @@
             setupScene();
 
             // Define the curve types for the animation
-            function targetCos(proportion) {
-                return (Math.cos(proportion * Math.PI - Math.PI) + 1) / 2;
+            function targetCos(prop) {
+                return (Math.cos(prop * Math.PI - Math.PI) + 1) / 2;
             }
-            function targetLinear(proportion) {
-                return proportion;
+
+            function targetCosback(prop) {
+                return (Math.cos((1-prop) * Math.PI - Math.PI) + 1) / 2;   
             }
-            function targetParabola(proportion) {
-                return proportion * proportion;
+
+            function targetLinear(prop) {
+                return prop;
+            }
+            function targetParabola(prop) {
+                return prop * prop;
             }
 
             function reattachNode(child, parent) {
                 child.detached = false;
-                THREE.SceneUtils.attach(child, scene, parent);
-                child.updateMatrixWorld();
                 parent.updateMatrixWorld();
-                child.position.x = parent.position.x;
-                child.position.y = parent.position.y;
-                child.position.z = parent.position.z;
-                child.rotation.x = parent.rotation.x;
-                child.rotation.y = parent.rotation.y;
-                child.rotation.z = parent.rotation.z;
+                child.position.x = 0;
+                child.position.y = 0;
+                child.position.z = 0;
+                child.rotation.x = 0;
+                child.rotation.y = 0;
+                child.rotation.z = 0;
+                parent.add(child);
+                child.updateMatrixWorld();
             }
 
-            function dropAllChildren() {
-                var obj, i;
-                for ( i = scene.children.length - 1; i >= 0 ; i -- ) {
-                    obj = scene.children[ i ];
-                    if (obj !== camera) {
-                        scene.remove(obj);
-                    }
-                }
-            }
+            // To keep track of the starting position of the sword while it falls
+            var swordBladeDropPoint = [0,0,0];
+            var swordTangDropPoint = [0,0,0];
+            var swordCoquilleDropPoint = [0,0,0];
+
 
             // Define the anims of the animation
-            // This is very close to working!!
+            // This almost works!
             var anims = [
                 {
                     animName   :    "Lunges and recovers1",
                     animStart  :    0,
-                    animEnd    :    3000,
-                    animCurve  :    targetCos
+                    animEnd    :    3000
                 },
                 {
                     animName   :    "Sword blade falls",
@@ -282,10 +278,14 @@
                                         swordTang.updateMatrixWorld();
                                         swordBlade.updateMatrixWorld();
                                         swordBlade.detached = true;
+                                        swordBladeDropPoint = [
+                                            swordBlade.position.x, 
+                                            swordBlade.position.y, 
+                                            swordBlade.position.z
+                                        ];
                                     },
                     animStart  :    1500,
-                    animEnd    :    2500,
-                    animCurve  :    targetParabola
+                    animEnd    :    2500
                 },
                 {
                     animName   :    "Examines sword",
@@ -299,16 +299,19 @@
                                         swordTang.updateMatrixWorld();
                                         swordBlade.updateMatrixWorld();
                                         swordTang.detached = true;
+                                        swordTangDropPoint = [
+                                            swordTang.position.x, 
+                                            swordTang.position.y, 
+                                            swordTang.position.z
+                                        ];
                                     },
                     animStart  :    4500,
-                    animEnd    :    5500,
-                    animCurve  :    targetParabola
+                    animEnd    :    5500
                 },
                 {
                     animName   :    "Lunges and recovers2",
                     animStart  :    6000,
-                    animEnd    :    9000,
-                    animCurve  :    targetCos
+                    animEnd    :    9000
                 },
                 {
                     animName   :    "Sword coquille falls off",
@@ -317,18 +320,21 @@
                                         swordHandle.updateMatrixWorld();
                                         swordCoquille.updateMatrixWorld();
                                         swordCoquille.detached = true;
+                                        swordCoquilleDropPoint = [
+                                            swordCoquille.position.x, 
+                                            swordCoquille.position.y, 
+                                            swordCoquille.position.z
+                                        ];
                                     },
                     animDestroy:    function () {
+                                        startTime = new Date().getTime();
                                         reattachNode(swordTang, swordHandle);
                                         reattachNode(swordCoquille, swordHandle);
                                         reattachNode(swordBlade, swordTang);
                                         setupSwordOffsets();
-                                        //dropAllChildren();
-                                        //setupScene();
                                     },
                     animStart  :    7500,
-                    animEnd    :    9000,
-                    animCurve  :    targetParabola
+                    animEnd    :    9000
                 }
             ];
 
@@ -344,7 +350,7 @@
 
 
             // Update the transition interval states
-            function updateanims(currentTime) {
+            function updateAnims(currentTime) {
                 var oldRelTime = (currentTime - startTime);
                 // Make sure we wrap around
                 var relTime = oldRelTime % duration;
@@ -374,7 +380,7 @@
             // And now the hacky stuff because I couldn't get the cool stuff above implemented cleanly...
             var proportion;
 
-            function intermediateValue(startTime, currentTime, startValue, endValue, targetFunction){
+            function intermediateValue(startTime, currentTime, startValue, endValue, targetFunction) {
                 /* alters the value of a parameter between two limits, 
                    from startValue to endValue and back again, with soft start and soft finish.
                 */
@@ -388,12 +394,25 @@
                 return intermediateValue;
             }
 
+            function intermediateValue2(startTime, currentTime, relStartTime, relEndTime, startValue, endValue, targetFunction) {
+                console.log(relEndTime-relStartTime);
+                var proportion2 = (currentTime - startTime)/(relEndTime-relStartTime);
+                var target = targetFunction(proportion2);
+                var intermediateValue = startValue + target * (endValue - startValue);
+                return intermediateValue;
+            }
+
             function update(node, nodesToUpdate, level) {
                 var currentTime = new Date().getTime();
 
-                updateanims(currentTime);
+                updateAnims(currentTime);
 
-                if  (node.rotates && !node.detached) {
+// swordBladeDropPoint = [0,0,0];
+//             var swordTangDropPoint = [0,0,0];
+//             var swordCoquilleDropPoint = [0,0,0];
+
+
+                if  (node.rotates) {
                     if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
                         node.rotation.x = intermediateValue(startTime, currentTime, node.startRotation[0], node.endRotation[0], targetCos);
                         node.rotation.y = intermediateValue(startTime, currentTime, node.startRotation[1], node.endRotation[1], targetCos);
@@ -405,9 +424,28 @@
                         node.rotation.z = node.startRotation[2];
                      }
                 }
-                // if (node.detached) {
-                //     node.position.y = intermediateValue(startTime, currentTime, node.position.y, 0, targetParabola);
-                // }
+
+                if  (swordBlade.detached === true) {
+                    swordBlade.position.x = swordBladeDropPoint[0];
+                    //swordBlade.position.y = swordBladeDropPoint[1];
+                    swordBlade.position.y = intermediateValue2(startTime, currentTime, 1500, 2500, swordBladeDropPoint[1], 0, targetParabola);
+                    swordBlade.position.z = swordBladeDropPoint[2];
+                }
+                if  (swordTang.detached === true) {
+                    swordTang.position.x = swordBladeDropPoint[0];
+                    //swordBlade.position.y = swordBladeDropPoint[1];
+                    swordTang.position.y = intermediateValue2(startTime, currentTime, 4500, 5500, swordTangDropPoint[1], 0, targetParabola);
+                    swordTang.position.z = swordTangDropPoint[2];
+                }
+                if  (swordTang.detached === true) {
+                    swordTang.position.x = swordBladeDropPoint[0];
+                    //swordBlade.position.y = swordBladeDropPoint[1];
+                    swordTang.position.y = intermediateValue2(startTime, currentTime, 7500, 9000, swordBladeDropPoint[1], 0, targetParabola);
+                    swordTang.position.z = swordBladeDropPoint[2];
+                }
+
+                //updateTranslation(node, nodesToUpdate, currentTime, targetParabola);
+                
                 var childTally = node.children.length;
                 if (childTally > 0) {
                     var listOfChildren = "";
@@ -426,9 +464,23 @@
             var nodesToUpdate = new Set();
             nodesToUpdate.add("all");
 
+            var cameraAngle = 3.141592654 / 2.0;
+            var cameraDistance = 10;
+
             function render() {
                 requestAnimationFrame(render);
+
+                // If we rotate the whole scene, detached objects will not be influenced by this rotation!
                 //scene.rotation.y +=0.005;       
+
+                // We need to rotate the camera around the scene instead, and keep the objects in place
+                //cameraAngle += 0.0025;
+                camera.position.x = scene.position.x + cameraDistance * Math.cos(cameraAngle);
+                camera.position.z = scene.position.z + cameraDistance * Math.sin(cameraAngle);
+                camera.lookAt(scene.position);
+
+
+
                 var axis = new THREE.Vector3(1, 0, 0).normalize();
                 update(scene, nodesToUpdate, 0);
                 renderer.render(scene, camera);
