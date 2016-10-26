@@ -10,9 +10,9 @@
             // Sam Hunt 14216618
 
             // Since there's no abstraction AT ALL for transitions or transformations and everything hinges on the cos wave,
-            // We need some pretty massive refactors/hacks to do non-co-wave stuff
+            // We needed some pretty massive refactors/hacks to do non-cos-wave stuff
 
-            // Ideally there would be a way to map transitions to their transformations, and different curve types would be 
+            // I've half-assed a way to map transitions to their transformations. Ideally, different curve types would be 
             // available to these and linked by a function pointer property inside the transition object etc
             // the updater would pick the right transitions based on the time intervals out of the total time 
             // (instead of a proportionate time that goes above 1.0!!!) and apply these in order relative to the node tree
@@ -22,7 +22,8 @@
             // We abstract this a bit here by passing in the function we want to use, but its pretty bad without abstracted 
             // transitions...
 
-            // I've had a go at implementing this but I'm at my wits end, and really busy coming into the last week of capstone. 
+            // I've had a go at implementing this but I'm at my wits end, and really busy coming into the last week of capstone.
+            // Sorry again for the late submission (Just 2 hours...)
            
             // Please take a look at the bulk of my attempt in the second half of the file... Cheers
 
@@ -199,6 +200,9 @@
                 frontWrist    . startRotation    = [    0,    0,     0];    frontWrist    . endRotation = [   0,    0,     0];
                 frontFingers  . startRotation    = [    0,    0,   0.1];    frontFingers  . endRotation = [   0,    0,     0];
 
+                // For the arm bend. Gosh.
+                frontElbow    . startRotation2    = [    0,    0,   1.2];    frontElbow    . endRotation2 = [   0,    0,    2.4];
+
                 // Sword stuff
                 swordHandle    . startRotation    = [    0,    0,   0];    swordHandle    . endRotation = [   0,    0,     0];
                 swordTang      . startRotation    = [    0,    0,   0];    swordTang      . endRotation = [   0,    0,     0];
@@ -214,7 +218,7 @@
                 piste.rotates = false;
                 scene.add(piste);
 
-                // Add a marker for the origin
+                // Add a new marker for the origin
                 originGeo = new THREE.SphereGeometry(0.3, 6,6);
                 originMat = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: false});
                 origin = new THREE.Mesh(originGeo, originMat);
@@ -226,15 +230,14 @@
                 camera.position.y = 1;
                 camera.position.x = 0;
             }
+
+            // I played with making this repeatable to reset the loop
+            // But its too slow so I just had to work out doing the sword only
             setupScene();
 
-            // Define the curve types for the animation
+            // Define the curve types for the animations
             function targetCos(prop) {
                 return (Math.cos(prop * Math.PI - Math.PI) + 1) / 2;
-            }
-
-            function targetCosback(prop) {
-                return (Math.cos((1-prop) * Math.PI - Math.PI) + 1) / 2;   
             }
 
             function targetLinear(prop) {
@@ -262,9 +265,16 @@
             var swordTangDropPoint = [0,0,0];
             var swordCoquilleDropPoint = [0,0,0];
 
+            // Yeah I've pretty much given up trying to do this nicely :/
+            var armBendyTime = false;
+            var armBendyTime2 = false;
 
-            // Define the anims of the animation
+            // Define the stages of the animation
             // This almost works!
+            // We want this so we can have multiple animations happening at once
+            // Obviously it would be better if the node animations were defined here...
+            // But its too late for that!
+
             var anims = [
                 {
                     animName   :    "Lunges and recovers1",
@@ -284,12 +294,32 @@
                                             swordBlade.position.z
                                         ];
                                     },
+                    animDestroy:    function () {
+                                        swordBlade.detached = false;
+                                    },
                     animStart  :    1500,
                     animEnd    :    2500
                 },
                 {
                     animName   :    "Examines sword",
                     animStart  :    3000,
+                    animInit   :    function () {
+                                        armBendyTime = true;
+                                    },
+                    animDestroy:    function () {
+                                        armBendyTime = false;
+                                    },
+                    animEnd    :    4500
+                },
+                {
+                    animName   :    "Yep, its broken",
+                    animStart  :    4500,
+                    animInit   :    function () {
+                                        armBendyTime2 = true;
+                                    },
+                    animDestroy:    function () {
+                                        armBendyTime2 = false;
+                                    },
                     animEnd    :    6000
                 },
                 {
@@ -304,6 +334,9 @@
                                             swordTang.position.y, 
                                             swordTang.position.z
                                         ];
+                                    },
+                    animDestroy:    function () {
+                                        swordTang.detached = false;
                                     },
                     animStart  :    4500,
                     animEnd    :    5500
@@ -327,11 +360,20 @@
                                         ];
                                     },
                     animDestroy:    function () {
+                                        swordCoquille.detached = false;
                                         startTime = new Date().getTime();
                                         reattachNode(swordTang, swordHandle);
                                         reattachNode(swordCoquille, swordHandle);
                                         reattachNode(swordBlade, swordTang);
                                         setupSwordOffsets();
+
+                                        swordBladeDropPoint = [0,0,0];
+                                        swordTangDropPoint = [0,0,0];
+                                        swordCoquilleDropPoint = [0,0,0];
+
+                                        proportion = 0;
+                                        armBendyTime = false;
+                                        armBendyTime2 = false;
                                     },
                     animStart  :    7500,
                     animEnd    :    9000
@@ -396,7 +438,9 @@
 
             function intermediateValue2(startTime, currentTime, relStartTime, relEndTime, startValue, endValue, targetFunction) {
                 console.log(relEndTime-relStartTime);
-                var proportion2 = (currentTime - startTime)/(relEndTime-relStartTime);
+
+
+                var proportion2 = (currentTime - startTime-relStartTime)/(relEndTime-relStartTime);
                 var target = targetFunction(proportion2);
                 var intermediateValue = startValue + target * (endValue - startValue);
                 return intermediateValue;
@@ -407,10 +451,9 @@
 
                 updateAnims(currentTime);
 
-// swordBladeDropPoint = [0,0,0];
-//             var swordTangDropPoint = [0,0,0];
-//             var swordCoquilleDropPoint = [0,0,0];
-
+                // Ideally all of the intermediate value calculations would be tied to the animation stages/transitions objects,
+                // But this is quite a bit to refactor since all of the rotation values are tied to the nodes...
+                // So we're going to hack it in here.
 
                 if  (node.rotates) {
                     if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
@@ -425,23 +468,36 @@
                      }
                 }
 
+                if (armBendyTime === true) {
+
+                    frontElbow.rotation.x = intermediateValue2(startTime, currentTime, 3000, 4500, frontElbow.startRotation2[0], frontElbow.endRotation2[0], targetLinear);
+                    frontElbow.rotation.y = intermediateValue2(startTime, currentTime, 3000, 4500, frontElbow.startRotation2[1], frontElbow.endRotation2[1], targetLinear);
+                    frontElbow.rotation.z = intermediateValue2(startTime, currentTime, 3000, 4500, frontElbow.startRotation2[2], frontElbow.endRotation2[2], targetLinear);
+                }
+                if (armBendyTime2 === true) {
+
+                    frontElbow.rotation.x = intermediateValue2(startTime, currentTime, 4500, 6000, frontElbow.endRotation2[0], frontElbow.startRotation2[0], targetLinear);
+                    frontElbow.rotation.y = intermediateValue2(startTime, currentTime, 4500, 6000, frontElbow.endRotation2[1], frontElbow.startRotation2[1], targetLinear);
+                    frontElbow.rotation.z = intermediateValue2(startTime, currentTime, 4500, 6000, frontElbow.endRotation2[2], frontElbow.startRotation2[2], targetLinear);
+                }
+
                 if  (swordBlade.detached === true) {
                     swordBlade.position.x = swordBladeDropPoint[0];
                     //swordBlade.position.y = swordBladeDropPoint[1];
-                    swordBlade.position.y = intermediateValue2(startTime, currentTime, 1500, 2500, swordBladeDropPoint[1], 0, targetParabola);
+                    swordBlade.position.y = intermediateValue2(startTime, currentTime, 1500, 2500, swordBladeDropPoint[1], 0.2, targetParabola);
                     swordBlade.position.z = swordBladeDropPoint[2];
                 }
                 if  (swordTang.detached === true) {
-                    swordTang.position.x = swordBladeDropPoint[0];
+                    swordTang.position.x = swordTangDropPoint[0];
                     //swordBlade.position.y = swordBladeDropPoint[1];
-                    swordTang.position.y = intermediateValue2(startTime, currentTime, 4500, 5500, swordTangDropPoint[1], 0, targetParabola);
+                    swordTang.position.y = intermediateValue2(startTime, currentTime, 4500, 5500, swordTangDropPoint[1], 0.2, targetParabola);
                     swordTang.position.z = swordTangDropPoint[2];
                 }
-                if  (swordTang.detached === true) {
-                    swordTang.position.x = swordBladeDropPoint[0];
+                if  (swordCoquille.detached === true) {
+                    swordCoquille.position.x = swordCoquilleDropPoint[0];
                     //swordBlade.position.y = swordBladeDropPoint[1];
-                    swordTang.position.y = intermediateValue2(startTime, currentTime, 7500, 9000, swordBladeDropPoint[1], 0, targetParabola);
-                    swordTang.position.z = swordBladeDropPoint[2];
+                    swordCoquille.position.y = intermediateValue2(startTime, currentTime, 7500, 9000, swordCoquilleDropPoint[1], 0.2, targetParabola);
+                    swordCoquille.position.z = swordCoquilleDropPoint[2];
                 }
 
                 //updateTranslation(node, nodesToUpdate, currentTime, targetParabola);
@@ -465,7 +521,7 @@
             nodesToUpdate.add("all");
 
             var cameraAngle = 3.141592654 / 2.0;
-            var cameraDistance = 10;
+            var cameraDistance = 14;
 
             function render() {
                 requestAnimationFrame(render);
@@ -474,7 +530,7 @@
                 //scene.rotation.y +=0.005;       
 
                 // We need to rotate the camera around the scene instead, and keep the objects in place
-                //cameraAngle += 0.0025;
+                cameraAngle += 0.005;
                 camera.position.x = scene.position.x + cameraDistance * Math.cos(cameraAngle);
                 camera.position.z = scene.position.z + cameraDistance * Math.sin(cameraAngle);
                 camera.lookAt(scene.position);
