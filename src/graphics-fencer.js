@@ -258,15 +258,15 @@ var anims = [
     {
         animName   :    "Sword blade falls",
         animInit   :    function () {
-                            THREE.SceneUtils.detach(swordBlade, swordTang, scene);
                             swordTang.updateMatrixWorld();
+                            THREE.SceneUtils.detach(swordBlade, swordTang, scene);
                             swordBlade.updateMatrixWorld();
-                            swordBlade.detached = true;
                             swordBladeDropPoint = [
                                 swordBlade.position.x, 
                                 swordBlade.position.y, 
                                 swordBlade.position.z
                             ];
+                            swordBlade.detached = true;
                         },
         animDestroy:    function () {
                             swordBlade.detached = false;
@@ -299,15 +299,15 @@ var anims = [
     {
         animName   :    "Sword pommel & tang fall off",
         animInit   :    function () {
+                            swordHandle.updateMatrixWorld();
                             THREE.SceneUtils.detach(swordTang, swordHandle, scene);
                             swordTang.updateMatrixWorld();
-                            swordBlade.updateMatrixWorld();
-                            swordTang.detached = true;
                             swordTangDropPoint = [
                                 swordTang.position.x, 
                                 swordTang.position.y, 
                                 swordTang.position.z
                             ];
+                            swordTang.detached = true;
                         },
         animDestroy:    function () {
                             swordTang.detached = false;
@@ -323,15 +323,15 @@ var anims = [
     {
         animName   :    "Sword coquille falls off",
         animInit   :    function () {
-                            THREE.SceneUtils.detach(swordCoquille, swordHandle, scene);
                             swordHandle.updateMatrixWorld();
+                            THREE.SceneUtils.detach(swordCoquille, swordHandle, scene);
                             swordCoquille.updateMatrixWorld();
-                            swordCoquille.detached = true;
                             swordCoquilleDropPoint = [
                                 swordCoquille.position.x, 
                                 swordCoquille.position.y, 
                                 swordCoquille.position.z
                             ];
+                            swordCoquille.detached = true;
                         },
         animDestroy:    function () {
                             swordCoquille.detached = false;
