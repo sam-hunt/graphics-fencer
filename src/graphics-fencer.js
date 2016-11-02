@@ -373,7 +373,7 @@ function updateAnims(currentTime) {
 
     // First close old anims
     for (var i = 0; i < anims.length; i++) {
-        if (((oldRelTime >= anims[i].animEnd) || (oldRelTime <= anims[i].animStart)) && (anims[i].active)) {
+        if (((oldRelTime >= anims[i].animEnd) || (oldRelTime < anims[i].animStart)) && (anims[i].active)) {
             anims[i].active = false;
             console.log(anims[i].animName + " ending");
             if (anims[i].animDestroy) {
@@ -383,7 +383,7 @@ function updateAnims(currentTime) {
     }
     // Then open the new anims
     for (var i = 0; i < anims.length; i++) {
-        if (((relTime > anims[i].animStart) && (relTime < anims[i].animEnd)) && (!anims[i].active)) {
+        if (((relTime >= anims[i].animStart) && (relTime < anims[i].animEnd)) && (!anims[i].active)) {
             console.log(anims[i].animName + " starting");
             anims[i].active = true;
             if (anims[i].animInit) {
