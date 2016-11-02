@@ -1,24 +1,6 @@
 
 // Sam Hunt 14216618
 
-// Since there's no abstraction AT ALL for transitions or transformations and everything hinges on the cos wave,
-// We needed some pretty massive refactors/hacks to do non-cos-wave stuff
-
-// I've half-assed a way to map transitions to their transformations. Ideally, different curve types would be 
-// available to these and linked by a function pointer property inside the transition object etc
-// the updater would pick the right transitions based on the time intervals out of the total time 
-// (instead of a proportionate time that goes above 1.0!!!) and apply these in order relative to the node tree
-
-// Also applying a cos curve globablly to all rotations is terrible for the reason that you can't have multiple
-// parts of the scene which move with different curve types AT THE SAME TIME.
-// We abstract this a bit here by passing in the function we want to use, but its pretty bad without abstracted 
-// transitions...
-
-// I've had a go at implementing this but I'm at my wits end, and really busy coming into the last week of capstone.
-// Sorry again for the late submission (Just 2 hours...)
-
-// Please take a look at the bulk of my attempt in the second half of the file... Cheers
-
 var scene = new THREE.Scene();
 scene.name = "Salle d'armes";
 scene.rotates = false;
@@ -411,7 +393,7 @@ function updateAnims(currentTime) {
     }
 }
 
-// And now the hacky stuff because I couldn't get the cool stuff above implemented cleanly...
+// Temporary hack
 var proportion;
 
 function intermediateValue(startTime, currentTime, startValue, endValue, targetFunction) {
@@ -445,7 +427,7 @@ function update(node, nodesToUpdate, level) {
 
     // Ideally all of the intermediate value calculations would be tied to the animation stages/transitions objects,
     // But this is quite a bit to refactor since all of the rotation values are tied to the nodes...
-    // So we're going to hack it in here.
+    // So we're going to hack it in here for now.
 
     if  (node.rotates) {
         if (nodesToUpdate.has("all") || nodesToUpdate.has(node) ) { 
@@ -475,19 +457,16 @@ function update(node, nodesToUpdate, level) {
 
     if  (swordBlade.detached === true) {
         swordBlade.position.x = swordBladeDropPoint[0];
-        //swordBlade.position.y = swordBladeDropPoint[1];
         swordBlade.position.y = intermediateValue2(startTime, currentTime, 1500, 2500, swordBladeDropPoint[1], 0.2, targetParabola);
         swordBlade.position.z = swordBladeDropPoint[2];
     }
     if  (swordTang.detached === true) {
         swordTang.position.x = swordTangDropPoint[0];
-        //swordBlade.position.y = swordBladeDropPoint[1];
         swordTang.position.y = intermediateValue2(startTime, currentTime, 4500, 5500, swordTangDropPoint[1], 0.2, targetParabola);
         swordTang.position.z = swordTangDropPoint[2];
     }
     if  (swordCoquille.detached === true) {
         swordCoquille.position.x = swordCoquilleDropPoint[0];
-        //swordBlade.position.y = swordBladeDropPoint[1];
         swordCoquille.position.y = intermediateValue2(startTime, currentTime, 7500, 9000, swordCoquilleDropPoint[1], 0.2, targetParabola);
         swordCoquille.position.z = swordCoquilleDropPoint[2];
     }
