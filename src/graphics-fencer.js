@@ -462,7 +462,7 @@ function update(node, nodesToUpdate, level) {
     }
     if  (swordTang.detached === true) {
         swordTang.position.x = swordTangDropPoint[0];
-        swordTang.position.y = intermediateValue2(startTime, currentTime, 4500, 5500, swordTangDropPoint[1], 0.2, targetParabola);
+        swordTang.position.y = intermediateValue2(startTime, currentTime, 4500, 5500, swordTangDropPoint[1], 0.4, targetParabola);
         swordTang.position.z = swordTangDropPoint[2];
     }
     if  (swordCoquille.detached === true) {
